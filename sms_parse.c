@@ -835,7 +835,7 @@ void incoming_call_processing(void)
 		switch(server_state)
 		{
 		case SERVER_STATE_DOWN:
-			send_sms("Server is already down.", phone_of_incomong_call);
+			send_sms_p(PSTR("Server is already down."), phone_of_incomong_call);
 			call_from_user = false;
 			break;
 		case SERVER_STATE_UNKNOWN:
@@ -844,7 +844,7 @@ void incoming_call_processing(void)
 			if(is_net_configured())
 				switch_off_from_call = true;
 			else
-				send_sms("Network params not configured.", phone_of_incomong_call);
+				send_sms_p(PSTR("Network params not configured."), phone_of_incomong_call);
 			break;
 		}
 	}
