@@ -1098,11 +1098,11 @@ char send_str_to_server(char *str, char *domen, Ushort port, char break_connecti
 		rez = wait_send_ok_s(10);
 		if(rez == true)
 		{
-			rez = mdm_wait_data_from_tcp_s(15);
+			rez = mdm_wait_data_from_tcp_s(15); // практика показала, что наш сервер отвечает не раньше, чем через 6-7 с, поэтому ждем подольше
 			if(rez==true)
 			{
 				if(tcp_data_processing)
-					tcp_data_processing(TCP_data_ptr);
+					tcp_data_processing(TCP_data_ptr); // функция, переданная через указатель для обработки принятых TCP данных
 				rez = true;
 			}
 			else
@@ -1148,15 +1148,6 @@ exit:
 	}
 	
 	return rez;
-}
-
-//*******************************************************************************************************************
-
-void close_connection(void)
-{
-	delay_ms(100);
-	uart_send_str_p(PSTR("AT+CIPCLOSE\r")); // закрываем TCP соединение
-	mdm_wait_ok_s(10);
 }
 
 //*******************************************************************************************************************

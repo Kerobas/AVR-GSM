@@ -40,7 +40,6 @@ char get_sms(void);
 char delete_all_sms(void);
 Uchar mdm_get_battery_level(void);
 Ushort get_battery_voltage(void);
-void close_connection(void);
 
 
 extern char sms_rec_phone_number[];
