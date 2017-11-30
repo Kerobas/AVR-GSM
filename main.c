@@ -72,8 +72,6 @@ int main(void)
 	beep_ms(10);
 	beep_ms(200);
 	
-	reset_uart_queue();
-	
 	get_sms();
 	delete_all_sms(); // попытка обойти глюк модема
 	

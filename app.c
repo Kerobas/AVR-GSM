@@ -113,6 +113,7 @@ void switch_off_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
+			delay_s(15); // пауза между попытками. Нет смысла мельтешить.
 		}
 		delay_ms(1000);
 		if(switch_off_from_call)
@@ -152,8 +153,9 @@ void turn_on_server_if_needed(void)
 				delay_s(10);
 				reset_mcu();
 			}
-			delay_s(10);
+			delay_s(15); // пауза между попытками. Нет смысла мельтешить.
 		}
+		delay_ms(1000);
 		command_to_wake_up_server = false;
 		send_sms_p(PSTR("Server received command to wake up."), sms_rec_phone_number);
 		sprintf_P(config.last_event, PSTR("Turn on server from admin SMS %s. Success."), sms_rec_phone_number);

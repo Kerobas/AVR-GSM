@@ -274,7 +274,6 @@ char gsm_mdm_init(void)
 		gsm_mdm_power_up_down_seq();
 		// ставим тупо задержку, т.к. сигнал STATUS при наличии внешнего питания всегда равен 1. Особенность SIM300
 		delay_s(15);
-		reset_uart_queue();
 		
 		uart_send_str_p(PSTR("ATE0\r")); // выключем эхо. Заодно проверяем, что модем включен. Если выключен, то начинаем заново.
 		if(mdm_wait_ok_ms(1000) == false)

@@ -120,6 +120,8 @@ void delay_ms(short delay)
 		#if(DEBUG==0)
 		_SLEEP();
 		#endif
+		while(is_queue_not_empty()) // тем временем, проверяем входной буфер
+			get_message_from_mdm();
 	}
 }
 
@@ -133,6 +135,8 @@ void delay_s(short delay)
 		#if(DEBUG==0)
 		_SLEEP();
 		#endif
+		while(is_queue_not_empty()) // тем временем, проверяем входной буфер
+			get_message_from_mdm();
 	}
 }
 
