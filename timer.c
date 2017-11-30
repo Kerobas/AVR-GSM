@@ -13,7 +13,7 @@ Ulong time_from_event_s=0;
 
 char switch_off_from_button = false;
 
-// период переполнения 10 мс
+// период переполнения 10 мс при частоте кварца 7,37МГц
 void timer0_init(void)
 {
 	TCCR0 = (1<<WGM01)|(1<<CS02)|(1<<CS00); // Clear Timer on Compare Match (CTC), presciler=1024
