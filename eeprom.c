@@ -80,6 +80,13 @@ void EEPROM_save_reset_count(void)
 
 //*******************************************************************************************************************
 
+void EEPROM_save_report_to_developer(void)
+{
+	EEPROM_write_buf((char*)&config.reports_en, sizeof(config.reports_en), 0 + (Ushort)((char*)&config.reports_en - (char*)&config));
+}
+
+//*******************************************************************************************************************
+
 void EEPROM_save_time_from_event(void)
 {
 	Ulong tempUL;

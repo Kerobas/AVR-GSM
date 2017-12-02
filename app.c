@@ -100,25 +100,26 @@ void switch_off_server_if_needed(void)
 			{
 				if(switch_off_from_call)
 				{
-					send_sms_p(PSTR("No connection with server."), phone_of_incomong_call);
+					if(send_sms_p(PSTR("No connection with server."), phone_of_incomong_call))
+						send_report_to_developer_p(PSTR("Turn off server from user call. Fail. Device is resetting")); // вторую СМС отправляем только в случае успеха первой
 					sprintf_P(config.last_event, PSTR("Turn off server from user call %s. Fail."), phone_of_incomong_call);
 					set_val(time_from_event_s, 0);
-					delay_s(10);
 				}
 				else if(switch_off_from_button)
 				{
 					sprintf_P(config.last_event, PSTR("Turn off server from push button. Fail."));
 					set_val(time_from_event_s, 0);
+					send_report_to_developer_p(PSTR("Turn off server from button push. Fail. Device is resetting"));
 				}
 				eeprom_save_config();
 				reset_mcu();
 			}
 			delay_s(15); // пауза между попытками. Нет смысла мельтешить.
 		}
-		delay_ms(1000);
+		delay_ms(5000);
 		if(switch_off_from_call)
 		{
-			switch_off_from_call = false;
+			incoming_call = call_from_user = switch_off_from_call = false;
 			send_sms_p(PSTR("Server received command to shut down."), phone_of_incomong_call);
 			sprintf_P(config.last_event, PSTR("Turn off server from user call %s. Success."), phone_of_incomong_call);
 			set_val(time_from_event_s, 0);
@@ -126,7 +127,7 @@ void switch_off_server_if_needed(void)
 		else if(switch_off_from_button)
 		{
 			switch_off_from_button = false;
-			sprintf_P(config.last_event, PSTR("Turn off server from push button. Success."));
+			sprintf_P(config.last_event, PSTR("Turn off server from button push. Success."));
 			set_val(time_from_event_s, 0);
 		}
 		eeprom_save_config();
@@ -146,14 +147,14 @@ void turn_on_server_if_needed(void)
 		{
 			if((get_time_s() - time_stamp) > 0) // если за 10 минут не удалось отправить команду, то перезапускаем систему
 			{
-				send_sms_p(PSTR("No connection with server."), sms_rec_phone_number);
+				if(send_sms_p(PSTR("No connection with server."), sms_rec_phone_number))
+					send_report_to_developer_p(PSTR("Fail to turn on server from admin SMS. Device is resetting.")); // вторую СМС отправляем только в случае успеха первой
 				sprintf_P(config.last_event, PSTR("Turn on server from admin SMS %s. Fail."), sms_rec_phone_number);
 				set_val(time_from_event_s, 0);
 				eeprom_save_config();
-				delay_s(10);
 				reset_mcu();
 			}
-			delay_s(15); // пауза между попытками. Нет смысла мельтешить.
+			delay_s(15); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(1000);
 		command_to_wake_up_server = false;
@@ -209,6 +210,7 @@ void update_server_state_if_needed(void)
 				count_of_errors = 0;
 			if(count_of_errors >= (MAX_COUNT_OF_ERRORS+2))
 			{
+				send_report_to_developer_p(PSTR("No Internet connection. Device is resetting."));
 				#if(DEBUG==0)
 				reset_mcu();
 				#endif
@@ -261,7 +263,7 @@ static char* get_json_val(char *ptr, __flash const char *str_p)
 				return false;
 			if(ptr[i]==' ')
 				continue;
-			if(ptr[i]=='"')
+			if(ptr[i]=='\"')
 			{
 				ptr += i;
 				break;
@@ -299,6 +301,30 @@ static void process_data_from_server(char *ptr)
 		}
 	}
 }
+
+//*******************************************************************************************************************
+// информирование разработчика о неполадке
+char send_report_to_developer_p(__flash const char *str)
+{
+	if((config.developer_phone[0][0] == '+') && (config.reports_en))
+	{
+		send_sms_p(str, &config.developer_phone[0][0]);
+		config.reports_en--; // выключаем автоинформирование разработчика, чтобы не утомить его частыми сообщениями. Если надо, включит еще раз.
+		EEPROM_save_report_to_developer();
+		return true;
+	}
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

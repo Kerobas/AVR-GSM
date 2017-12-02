@@ -79,10 +79,7 @@ int main(void)
 	while(1)
     {
 		if(reset_command_accepted)
-		{
-			delay_s(8);
 			reset_mcu();
-		}
 		switch_off_server_if_needed();
 		turn_on_server_if_needed();
 		update_server_state_if_needed();

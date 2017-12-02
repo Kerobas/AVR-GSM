@@ -22,7 +22,7 @@ void switch_off_server_if_needed(void);
 void turn_on_server_if_needed(void);
 void update_server_state_if_needed(void);
 char test_gprs_connection(void);
-
+char send_report_to_developer_p(__flash const char *str);
 
 extern Ulong errors_from_reset;
 extern char command_to_wake_up_server;

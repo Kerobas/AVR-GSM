@@ -234,7 +234,7 @@ void check_button(void)
 	
 	if(is_main_button_pushed())
 	{
-		if(press_button_ms < config.long_press_ms)
+		if(press_button_ms <= config.long_press_ms)
 			press_button_ms +=10;
 		else if(button_state == false)
 		{

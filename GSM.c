@@ -779,20 +779,21 @@ char send_sms_p(__flash const char *str, char *phone)
 
 char get_message_from_mdm(void)
 {
-	char *str;
 	char *ptr;
 	
-	str = gsm_poll_for_string();
-	if(str)
+	ptr = gsm_poll_for_string();
+	if(ptr)
 	{
 		// асинхронные сообщения обрабатываем прямо здесь
-		if(strstr_P(str, PSTR("+CMTI"))) // пришла асинхронная индикация о принятой СМСке
+		if(strstr_P(ptr, PSTR("+CMTI:"))) // пришла асинхронная индикация о принятой СМСке
 		{
 			unread_sms = true;
+			return true;
 		}
-		else if(strstr_P(str, PSTR("+CLIP:")))   // пришла асинхронная индикация о звонке
+		ptr = strstr_P(ptr, PSTR("+CLIP:"));
+		if(ptr)   // пришла асинхронная индикация о звонке
 		{
-			ptr = strchr(mdm_data, ':');
+			ptr += 6;
 			ptr = strchr(ptr, '+');
 			if(find_phone_in_phone_list(ptr, USER_LIST)) // ищем телефон в списке юзеров
 			{
@@ -883,7 +884,7 @@ char get_sms(void)
 			rez = mdm_wait_str(5000);
 			if(rez==true)
 			{
-				wait_the_end_of_flow_from_mdm_ms(1000); // ждем окончания потока данных от модема
+				wait_the_end_of_flow_from_mdm_ms(1000); // ждем окончания потока данных от модема, иными словами, flush
 				process_sms_body(mdm_data);
 				for(i=0;i<3;i++)
 				{
@@ -925,7 +926,8 @@ char delete_all_sms(void)
 }
 
 //*******************************************************************************************************************
-
+// микроконтроллер у нас хиленький, поэтому используем встроенный TCP/IP стек модема
+// в качестве одного из параметров передается указатель на функцию, которая должна обработать принятый ответ от сервера
 char send_str_to_server(char *str, char *domen, Ushort port, char break_connection, void (*tcp_data_processing)(char *ptr))
 {
 	char rez, i;

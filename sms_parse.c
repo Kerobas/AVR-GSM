@@ -433,25 +433,22 @@ char* get_param(char *str, char *sms_text)
 	
 	else if(memcmp_P(str, PSTR("testmode;"), 9) == 0)
 	{
-		Uchar mode;
 		str += 9;
-		if(config.test_mode == true)
-			mode = true;
-		else
-			mode = false;
-		sprintf_P(sms_text, PSTR("testmode=%d;"), mode);
+		sprintf_P(sms_text, PSTR("testmode=%u;"), config.test_mode);
 		return str;
 	}
 	
 	else if(memcmp_P(str, PSTR("voice;"), 6) == 0)
 	{
-		Uchar mode;
 		str += 6;
-		if(config.debug_voice_enable == true)
-			mode = true;
-		else
-			mode = false;
-		sprintf_P(sms_text, PSTR("voice=%d;"), mode);
+		sprintf_P(sms_text, PSTR("voice=%u;"), config.debug_voice_enable);
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("report;"), 7) == 0)
+	{
+		str += 7;
+		sprintf_P(sms_text, PSTR("report=%u;"), config.reports_en);
 		return str;
 	}
 	
@@ -786,6 +783,22 @@ char* set_param(char *ptr)
 		return ptr;
 	}
 	
+	if(memcmp_P(ptr, PSTR("report="), 7) == 0)
+	{
+		Ulong val;
+		ptr+=7;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.reports_en = val;
+		ptr++;
+		return ptr;
+	}
+	
 	return false;
 }
 
@@ -842,7 +855,10 @@ void incoming_call_processing(void)
 		case SERVER_STATE_UP:
 		default:
 			if(is_net_configured())
+			{
 				switch_off_from_call = true;
+				send_sms_p(PSTR("Shutting down server. Success will be reported."), phone_of_incomong_call);
+			}
 			else
 				send_sms_p(PSTR("Network params not configured."), phone_of_incomong_call);
 			break;

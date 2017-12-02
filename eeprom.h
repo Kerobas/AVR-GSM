@@ -33,6 +33,7 @@ typedef struct{
 	Ushort long_press_ms;
 	Ulong unable_to_turn_on_modem;
 	Ulong reset_count;
+	Uchar reports_en;
 	char debug_voice_enable;
 	char test_mode;
 } config_t;
@@ -50,6 +51,7 @@ void eeprom_read_config(void);
 void eeprom_save_config(void);
 void EEPROM_save_reset_count(void);
 void EEPROM_save_time_from_event(void);
+void EEPROM_save_report_to_developer(void);
 void check_rst_source(void);
 
 
