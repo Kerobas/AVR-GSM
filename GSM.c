@@ -812,7 +812,7 @@ void mdm_get_signal_strength(void)
 			return;
 		}
 		else
-			signal_strength = -113 + (Schar)level*2;
+			signal_strength = -113 + (Schar)level*2; // получаем величину в дедцебеллмиливольтах дБм
 		return;
 	}
 }
