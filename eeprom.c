@@ -55,6 +55,7 @@ void eeprom_read_config(void)
 		memset(&config, 0, sizeof(config_t));
 		config.test_mode = true;
 		config.debug_voice_enable = true;
+		config.relay_enable = true;
 		sprintf_P(config.test_domen, PSTR("www.yandex.ru"));
 		eeprom_save_config();
 	}

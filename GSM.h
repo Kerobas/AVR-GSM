@@ -40,6 +40,7 @@ char get_sms(void);
 char delete_all_sms(void);
 Uchar mdm_get_battery_level(void);
 Ushort get_battery_voltage(void);
+void mdm_get_signal_strength(void);
 
 
 extern char sms_rec_phone_number[];
@@ -50,5 +51,6 @@ extern char call_from_user;
 extern char incoming_call;
 extern char registered_in_gsm_network;
 extern char apn_set_up_ok;
+extern Schar signal_strength;
 
 #endif

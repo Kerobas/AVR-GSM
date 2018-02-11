@@ -452,6 +452,13 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("relay;"), 6) == 0)
+	{
+		str += 6;
+		sprintf_P(sms_text, PSTR("relay=%u;"), config.relay_enable);
+		return str;
+	}
+	
 	else if(memcmp_P(str, PSTR("lastevent;"), 10) == 0)
 	{
 		char d,h,m,s;
@@ -469,6 +476,13 @@ char* get_param(char *str, char *sms_text)
 		}
 		else
 			sprintf_P(sms_text, PSTR("no events during past week;"));
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("signal;"), 7) == 0)
+	{
+		str += 7;
+		sprintf_P(sms_text, PSTR("signal=%ddBm;"), signal_strength);
 		return str;
 	}
 	
@@ -795,6 +809,26 @@ char* set_param(char *ptr)
 		if(*ptr != ';')
 			return false;
 		config.reports_en = val;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("relay="), 6) == 0)
+	{
+		Ushort relay;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=6;
+		if(*ptr == '0')
+			relay = 0;
+		else if(*ptr == '1')
+			relay = 1;
+		else
+			return false;
+		if(*++ptr != ';')
+			return false;
+		config.relay_enable = relay;
 		ptr++;
 		return ptr;
 	}

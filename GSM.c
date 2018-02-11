@@ -1,7 +1,7 @@
 ﻿
 #include "main.h"
 
-#define NET_BUF_SIZE	   512
+#define NET_BUF_SIZE	   720
 #define APN_LIST_SIZE      5
 #define PIN_CODE           "4801"
 
@@ -17,6 +17,7 @@ char incoming_call = false;
 char server_state = SERVER_STATE_UNKNOWN;
 char switch_off_from_call = false;
 char apn_set_up_ok = false;
+Schar signal_strength = 0xFF;
 	
 char registration_status=0;
 Ushort TCP_data_len;
@@ -35,9 +36,9 @@ __flash static const apn_list_t apn_list[APN_LIST_SIZE] =
 {
 	{25001,"internet.mts.ru","mts","mts"},
 	{25002,"internet","gdata","gdata"},
-	{25020,"internet.tele2.ru","tele2",""},
+	{25020,"internet.tele2.ru","tele2","tele2"},
 	{25099,"internet.beeline.ru","beeline","beeline"},
-	{25011,"internet.yota","yota",""}
+	{25011,"internet.yota","yota","yota"}
 };
 
 //*******************************************************************************************************************
@@ -131,11 +132,11 @@ char* gsm_poll_for_string(void)
 	static Ushort finish_item;
 	Uchar ch;
 	
-	if((get_time_ms() - time_stamp) > 10)
+	if((get_time_s() - time_stamp) > 10)
 		state = 0;
 	if(is_queue_not_empty())
 	{
-		time_stamp = get_time_ms();
+		time_stamp = get_time_s();
 		ch = get_byte_from_queue();
 		switch(state)
 		{
@@ -155,7 +156,13 @@ char* gsm_poll_for_string(void)
 		break;
 		case 3:
 			mdm_data[i] = ch;
-			i = (i+1)&(NET_BUF_SIZE-1);
+			i++;
+			if(i>=NET_BUF_SIZE)
+			{
+				i=0;
+				state = 0; // переполнение входного буфера
+				break;
+			}
 			if(i>=2)
 			{
 				if((mdm_data[i-2] == '\r')&&(mdm_data[i-1] == '\n'))
@@ -165,8 +172,6 @@ char* gsm_poll_for_string(void)
 					return mdm_data;
 				}
 			}
-			if(i==0) // было принято 512 байт, переполнение входного буфера
-				state = 0;
 			if(i==5)
 			{
 				if(memcmp_P(mdm_data, PSTR("+IPD"), 4) == 0) // данные из TCP соединения
@@ -175,7 +180,9 @@ char* gsm_poll_for_string(void)
 			break;
 		case 4:
 			mdm_data[i] = ch;
-			i = (i+1)&(NET_BUF_SIZE-1);
+			i++;
+			//if(i>=NET_BUF_SIZE) эта проверка не нужна, т.к. ниже она есть
+			//	i=0;
 			if(i>8)
 			{
 				state = 0;
@@ -204,14 +211,18 @@ char* gsm_poll_for_string(void)
 			break;
 		case 5:
 			mdm_data[i] = ch; // собственно данные из TCP соединения
-			i = (i+1)&(NET_BUF_SIZE-1);
+			i++;
+			if(i>=NET_BUF_SIZE)
+			{
+				i=0;
+				state = 0; // переполнение входного буфера
+				break;
+			}
 			if(i>=finish_item)
 			{
 				state = 0;
 				return mdm_data;
 			}
-			if(i==0) // было принято 512 байт, переполнение входного буфера
-				state = 0;
 			break;
 		}
 	}
@@ -260,23 +271,47 @@ char gsm_mdm_inter_pin(void)
 
 //*******************************************************************************************************************
 
-char gsm_mdm_init(void)
+char __attribute__((optimize("-Os"))) gsm_mdm_init(void)
 {
 	Uchar i;
 	char rez;
 	short time_stamp = get_time_s() + 600; // на инициализацию модема отводим 600 секунд
 	
+	if(config.relay_enable)
+	{
+		// снимаем, а потом заново подаем питание на модем
+		// реле срабатывают только при наличии внешнего питания
+		relay2_on(); // сначала отключаем 5V
+		delay_ms(50); // задержка, чтобы реле не щелкали одновременно
+		relay1_on(); // потом отключаем аккумулятор
+		delay_ms(4000);
+		relay1_off();
+		delay_ms(50);
+		relay2_off();
+		delay_ms(4000);
+	}
+	
 	while(1)
 	{
 		if((get_time_s() - time_stamp) > 0)
 			return false;
-		// если модем был включен, то сначала выключаем. Если выключен, то включаем
+		
 		gsm_mdm_power_up_down_seq();
-		// ставим тупо задержку, т.к. сигнал STATUS при наличии внешнего питания всегда равен 1. Особенность SIM300
+		// ставим просто задержку, т.к. сигнал STATUS при наличии внешнего питания всегда равен 1. Особенность SIM300
 		delay_s(15);
 		
-		uart_send_str_p(PSTR("ATE0\r")); // выключем эхо. Заодно проверяем, что модем включен. Если выключен, то начинаем заново.
-		if(mdm_wait_ok_ms(1000) == false)
+		uart_send_str_p(PSTR("AT\r")); // автосинхронизация бодрейта
+		if(mdm_wait_ok_ms(2000) == false)
+			continue;
+			
+		delay_ms(1000);
+		uart_send_str_p(PSTR("AT&F\r")); // сбрасываем все насторойки по умолчанию
+		if(mdm_wait_ok_ms(5000) == false)
+			continue;
+		
+		delay_ms(1000);
+		uart_send_str_p(PSTR("ATE0\r")); // выключем эхо
+		if(mdm_wait_ok_ms(5000) == false)
 			continue;
 		
 		for(i=0;i<3;i++)
@@ -739,6 +774,51 @@ Ushort get_battery_voltage(void)
 
 //*******************************************************************************************************************
 
+void mdm_get_signal_strength(void)
+{
+	char *ptr;
+	char rez;
+	Ulong level;
+	
+	delay_ms(100);
+	uart_send_str_p(PSTR("AT+CSQ\r"));
+	while(1)
+	{
+		rez = mdm_wait_str(3000);
+		if(rez==false)
+		{
+			signal_strength = 0xFF;
+			return;
+		}
+		ptr = strstr_P(mdm_data, PSTR("+CSQ:"));
+		if(ptr==false)
+			continue;
+		ptr = strchr(ptr, ':');
+		if(!ptr)
+		{
+			signal_strength = 0xFF;
+			return;
+		}
+		ptr+=2;
+		if(isdigit(*ptr) == false)
+		{
+			signal_strength = 0xFF;
+			return;
+		}
+		level = strtoul(ptr, 0, 10);
+		if(level>=32)
+		{
+			signal_strength = 0xFF;
+			return;
+		}
+		else
+			signal_strength = -113 + (Schar)level*2;
+		return;
+	}
+}
+
+//*******************************************************************************************************************
+
 char send_sms(char *str, char *phone)
 {
 	char rez;
@@ -1099,7 +1179,7 @@ char send_str_to_server(char *str, char *domen, Ushort port, char break_connecti
 		rez = wait_send_ok_s(10);
 		if(rez == true)
 		{
-			rez = mdm_wait_data_from_tcp_s(15); // практика показала, что наш сервер отвечает не раньше, чем через 6-7 с, поэтому ждем подольше
+			rez = mdm_wait_data_from_tcp_s(20); // ответ приходит не раньше, чем через 6-7 с, поэтому ждем подольше
 			if(rez==true)
 			{
 				if(tcp_data_processing)

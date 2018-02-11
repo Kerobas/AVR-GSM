@@ -6,13 +6,12 @@
 #define ADMIN_LIST					1
 #define DEVELOPER_LIST				2
 
-#define MAX_COUNT_OF_ERRORS			6
 #if(DEBUG==1)
 	#define PERIOD_OF_TEST_S        20
 #else
-	#define PERIOD_OF_TEST_S        120
+	#define PERIOD_OF_TEST_S        60
 #endif
-
+#define MAX_COUNT_OF_ERRORS			(15*60/PERIOD_OF_TEST_S)
 
 
 char update_server_state(void);

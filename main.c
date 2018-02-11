@@ -33,7 +33,7 @@ int main(void)
 	ADC_init();
 	sei();
 	
-	delay_ms(1000);
+	delay_ms(100);
 	
 	eeprom_read_config();
 	check_rst_source();

@@ -35,7 +35,8 @@ typedef struct{
 	Ulong reset_count;
 	Uchar reports_en;
 	char debug_voice_enable;
-	char test_mode;
+	char test_mode; // этот параметр должен быть в конце списка, т.к. по его величине определяется чистота EEPROM. Если он не в конце, то это временно.
+	char relay_enable;
 } config_t;
 
 

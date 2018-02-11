@@ -1,7 +1,9 @@
 ﻿
 #include "main.h"
 
-static char uart_in_buf[256];
+#define UART_BUF_SIZE 64
+
+static char uart_in_buf[UART_BUF_SIZE];
 static Uchar head;
 static Uchar tail;
 
@@ -38,7 +40,7 @@ ISR(USART_RXC_vect)
 	if ((status & ((1<<FE) | (1<<PE) | (1<<DOR)))==0)
 	{
 		uart_in_buf[head] = data;
-		head++;
+		head = (head+1)&(UART_BUF_SIZE-1);
 	}
 }
 
@@ -48,7 +50,7 @@ char get_byte_from_queue(void)
 {
 	char data;
 	data = uart_in_buf[tail];
-	tail++;
+	tail = (tail+1)&(UART_BUF_SIZE-1);
 	return data;
 }
 
@@ -57,9 +59,9 @@ char get_byte_from_queue(void)
 char is_queue_not_empty(void)
 {
 	if(head!=tail)
-		return 1;
+		return true;
 	else
-		return 0;
+		return false;
 }
 
 //*******************************************************************************************************************

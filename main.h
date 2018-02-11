@@ -5,6 +5,7 @@
 #define MAIN_H_
 
 typedef unsigned char Uchar;
+typedef signed char Schar;
 typedef unsigned char Uint8;
 typedef signed char Int8;
 typedef unsigned short Ushort;

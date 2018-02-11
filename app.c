@@ -93,10 +93,10 @@ void switch_off_server_if_needed(void)
 	{
 		if(switch_off_from_call)
 			beep_ms(10);
-		time_stamp = get_time_s() + 600; // пытаемся отправить команду на выключение в течение 10 минут (600 секунд)
+		time_stamp = get_time_s() + 900; // пытаемся отправить команду на выключение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_DOWN) == false)
 		{
-			if((get_time_s() - time_stamp) > 0) // если за 10 минут не удалось отправить команду, то перезапускаем систему
+			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
 			{
 				if(switch_off_from_call)
 				{
@@ -114,7 +114,7 @@ void switch_off_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(15); // пауза между попытками. Нет смысла мельтешить.
+			delay_s(30); // пауза между попытками. Нет смысла мельтешить.
 		}
 		delay_ms(5000);
 		if(switch_off_from_call)
@@ -142,10 +142,10 @@ void turn_on_server_if_needed(void)
 	
 	if(command_to_wake_up_server == true)
 	{
-		time_stamp = get_time_s() + 600; // пытаемся отправить команду на включение в течение 10 минут (600 секунд)
+		time_stamp = get_time_s() + 900; // пытаемся отправить команду на включение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_UP) != true)
 		{
-			if((get_time_s() - time_stamp) > 0) // если за 10 минут не удалось отправить команду, то перезапускаем систему
+			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
 			{
 				if(send_sms_p(PSTR("No connection with server."), sms_rec_phone_number))
 					send_report_to_developer_p(PSTR("Fail to turn on server from admin SMS. Device is resetting.")); // вторую СМС отправляем только в случае успеха первой
@@ -154,7 +154,7 @@ void turn_on_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(15); // пауза между попытками. Мельтешить нет смысла.
+			delay_s(30); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(1000);
 		command_to_wake_up_server = false;
@@ -172,7 +172,7 @@ void update_server_state_if_needed(void)
 	static char first = true;
 	static short time_of_last_tcp_test_s;
 	static Uchar count_of_errors = 0;
-	static Uchar count_of_tests = 0;
+	static Ushort count_of_tests = 0;
 	char rez;
 	
 	if(first)
@@ -184,6 +184,7 @@ void update_server_state_if_needed(void)
 	if((get_time_s() - time_of_last_tcp_test_s) > PERIOD_OF_TEST_S)
 	{
 		time_of_last_tcp_test_s = get_time_s();
+		mdm_get_signal_strength();
 		if(count_of_errors < MAX_COUNT_OF_ERRORS)
 		{
 			rez = update_server_state();
@@ -201,7 +202,7 @@ void update_server_state_if_needed(void)
 		else
 		{
 			count_of_tests++;
-			if(count_of_tests >= 20)
+			if(count_of_tests >= (3600*4/PERIOD_OF_TEST_S))
 				reset_mcu();
 			rez = test_gprs_connection();
 			if(rez==false)
