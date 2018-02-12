@@ -133,7 +133,14 @@ char* gsm_poll_for_string(void)
 	Uchar ch;
 	
 	if((get_time_s() - time_stamp) > 10)
+	{
+		if(state==5)
+		{
+			volatile char dummy;
+			dummy=dummy;
+		}
 		state = 0;
+	}
 	if(is_queue_not_empty())
 	{
 		time_stamp = get_time_s();

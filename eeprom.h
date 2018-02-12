@@ -9,7 +9,7 @@
 #define DOMEN_LENGTH_STR        32
 #define TOKEN_MAX_LENGTH        32
 #define ID_MAX_LENGTH           64
-#define MAX_TIME_FROM_EVENT     (3600UL*24UL*7)
+#define MAX_TIME_FROM_EVENT     (3600UL*24UL*31)
 #define APN_MAX_LEN             32
 #define UNAME_MAX_LEN           20
 #define PWD_MAX_LEN             20

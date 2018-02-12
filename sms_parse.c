@@ -475,7 +475,7 @@ char* get_param(char *str, char *sms_text)
 			sprintf_P(sms_text, PSTR("lastevent=%s %dd%dh%dm%ds ago;"), config.last_event, d, h, m, s);
 		}
 		else
-			sprintf_P(sms_text, PSTR("no events during past week;"));
+			sprintf_P(sms_text, PSTR("no events during past month;"));
 		return str;
 	}
 	

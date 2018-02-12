@@ -114,7 +114,7 @@ void switch_off_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(30); // пауза между попытками. Нет смысла мельтешить.
+			delay_s(120); // пауза между попытками. Нет смысла мельтешить.
 		}
 		delay_ms(5000);
 		if(switch_off_from_call)
@@ -154,7 +154,7 @@ void turn_on_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(30); // пауза между попытками. Мельтешить нет смысла.
+			delay_s(120); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(1000);
 		command_to_wake_up_server = false;
