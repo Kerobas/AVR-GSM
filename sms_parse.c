@@ -486,10 +486,31 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("answer;"), 7) == 0)
+	{
+		str += 7;
+		sprintf_P(sms_text, PSTR("answer=%ds;"), config.time_to_wait_answer_s);
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("period;"), 7) == 0)
+	{
+		str += 7;
+		sprintf_P(sms_text, PSTR("period=%ds;"), config.period_of_test_s);
+		return str;
+	}
+	
 	else if(memcmp_P(str, PSTR("error;"), 6) == 0)
 	{
 		str += 6;
 		sprintf_P(sms_text, PSTR("error1=%d,error2=%d;"), error_code1, error_code2);
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("prompt;"), 7) == 0)
+	{
+		str += 7;
+		sprintf_P(sms_text, PSTR("prompt=%d;"), config.time_to_wait_prompt_s);
 		return str;
 	}
 	
@@ -807,6 +828,9 @@ char* set_param(char *ptr)
 	if(memcmp_P(ptr, PSTR("report="), 7) == 0)
 	{
 		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
 		ptr+=7;
 		if(isdigit(*ptr) == false)
 			return false;
@@ -816,6 +840,63 @@ char* set_param(char *ptr)
 		if(*ptr != ';')
 			return false;
 		config.reports_en = val;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("period="), 7) == 0)
+	{
+		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=7;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.period_of_test_s = val;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("answer="), 7) == 0)
+	{
+		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=7;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.time_to_wait_answer_s = val;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("prompt="), 7) == 0)
+	{
+		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=7;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.time_to_wait_prompt_s = val;
 		ptr++;
 		return ptr;
 	}

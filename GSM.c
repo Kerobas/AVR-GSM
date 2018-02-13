@@ -1014,9 +1014,9 @@ char delete_all_sms(void)
 }
 
 //*******************************************************************************************************************
-// микроконтроллер у нас хиленький, поэтому используем встроенный TCP/IP стек модема
+// микроконтроллер у нас хилый, поэтому используем встроенный TCP/IP стек модема
 // в качестве одного из параметров передается указатель на функцию, которая должна обработать принятый ответ от сервера
-char send_str_to_server(char *str, char *domen, Ushort port, char break_connection, void (*tcp_data_processing)(char *ptr))
+char send_str_to_server(char *str, char *domen, Ushort port, void (*tcp_data_processing)(char *ptr))
 {
 	char rez, i;
 	char *ptr;
@@ -1140,45 +1140,48 @@ char send_str_to_server(char *str, char *domen, Ushort port, char break_connecti
 			return 11;
 	}
 	
-	if(strstr_P(mdm_data, PSTR("CONNECT OK")) == false) // нет текущего соединения
+	if(strstr_P(mdm_data, PSTR("CONNECT OK"))) // соединение не закрыто
 	{
-		for(i=0;i<3;i++)
-		{
-			delay_ms(100);
-			if(isdigit(config.domen[0]))
-				uart_send_str_p(PSTR("AT+CDNSORIP=0\r")); // IP адрес сервера вводится напрямую числом xxx.xxx.xxx.xxx
-			else
-				uart_send_str_p(PSTR("AT+CDNSORIP=1\r")); // адрес сервера вводится в виде домена 
-			rez = mdm_wait_ok_ms(5000);
-			if(rez == true)
-				break;
-		}
-		if(rez == false)
-			return 13;
+		rez = 19;
+		goto exit;
+	}
+		
+	for(i=0;i<3;i++)
+	{
+		delay_ms(100);
+		if(isdigit(config.domen[0]))
+			uart_send_str_p(PSTR("AT+CDNSORIP=0\r")); // IP адрес сервера вводится напрямую числом xxx.xxx.xxx.xxx
+		else
+			uart_send_str_p(PSTR("AT+CDNSORIP=1\r")); // адрес сервера вводится в виде домена 
+		rez = mdm_wait_ok_ms(5000);
+		if(rez == true)
+			break;
+	}
+	if(rez == false)
+		return 13;
 	
-		for(i=0;i<3;i++)
-		{
-			delay_ms(100);
-			sprintf_P(mdm_data, PSTR("AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\r"), domen, port); // стартуем TCP соединение
-			uart_send_str(mdm_data);
-			rez = mdm_wait_ok_ms(5000);
-			if(rez == true)
-				break;
-		}
-		if(rez == false)
-			return 14;
+	for(i=0;i<3;i++)
+	{
+		delay_ms(100);
+		sprintf_P(mdm_data, PSTR("AT+CIPSTART=\"TCP\",\"%s\",\"%d\"\r"), domen, port); // стартуем TCP соединение
+		uart_send_str(mdm_data);
+		rez = mdm_wait_ok_ms(5000);
+		if(rez == true)
+			break;
+	}
+	if(rez == false)
+		return 14;
 	
-		rez = wait_connect_ok_s(10);
-		if(rez == false)
-		{
-			rez = 15;
-			goto exit;
-		}
+	rez = wait_connect_ok_s(10);
+	if(rez == false)
+	{
+		rez = 15;
+		goto exit;
 	}
 	
 	delay_ms(100);
 	uart_send_str_p(PSTR("AT+CIPSEND\r")); // запрашиваем предложение от модема для отправки данных >
-	rez = mdm_wait_prompt_s(5);
+	rez = mdm_wait_prompt_s(config.time_to_wait_prompt_s);
 	
 	if(rez == true)
 	{
@@ -1187,7 +1190,7 @@ char send_str_to_server(char *str, char *domen, Ushort port, char break_connecti
 		rez = wait_send_ok_s(10);
 		if(rez == true)
 		{
-			rez = mdm_wait_data_from_tcp_s(20); // ответ приходит не раньше, чем через 6-7 с, поэтому ждем подольше
+			rez = mdm_wait_data_from_tcp_s(config.time_to_wait_answer_s); // ответ приходит не раньше, чем через 8 с, поэтому ждем подольше
 			if(rez==true)
 			{
 				if(tcp_data_processing)
@@ -1211,7 +1214,7 @@ exit:
 			count_of_errors++;
 		if(count_of_errors==1)
 			time_of_first_error = get_time_s();
-		if((get_time_s()-time_of_first_error) >= 120)
+		if((get_time_s()-time_of_first_error) >= config.period_of_test_s)
 		{
 			count_of_errors = 0;
 			delay_ms(100);
@@ -1228,12 +1231,9 @@ exit:
 	else
 	{
 		count_of_errors = 0;
-		if(break_connection)
-		{
-			delay_ms(100);
-			uart_send_str_p(PSTR("AT+CIPCLOSE\r")); // закрываем TCP соединение
-			mdm_wait_ok_s(10);
-		}
+		delay_ms(100);
+		uart_send_str_p(PSTR("AT+CIPCLOSE\r")); // закрываем TCP соединение
+		mdm_wait_ok_s(10);
 	}
 	
 	return rez;

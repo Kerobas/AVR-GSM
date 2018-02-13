@@ -56,6 +56,9 @@ void eeprom_read_config(void)
 		config.test_mode = true;
 		config.debug_voice_enable = true;
 		config.relay_enable = true;
+		config.time_to_wait_answer_s = 25;
+		config.period_of_test_s = 180;
+		config.time_to_wait_prompt_s = 6;
 		sprintf_P(config.test_domen, PSTR("www.yandex.ru"));
 		eeprom_save_config();
 	}

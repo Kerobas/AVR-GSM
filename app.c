@@ -19,23 +19,29 @@ char update_server_state(void)
 	char net_buf[161];
 	char rez;
 	char *ptr;
+	static char last_state = SERVER_STATE_UNKNOWN;
 	
 	ptr = net_buf;
 	ptr += sprintf_P(ptr, PSTR("GET /status HTTP/1.1\r\nHost: %s:%u\r\n"), config.domen, config.port);
 	if(config.token[0])
 		ptr += sprintf_P(ptr, PSTR("Authorization: Bearer %s\r\n"), config.token);
 	ptr += sprintf_P(ptr, PSTR("\r\n"));
-	rez = send_str_to_server(net_buf, config.domen, config.port, true, &process_data_from_server);
+	rez = send_str_to_server(net_buf, config.domen, config.port, &process_data_from_server);
 	if(rez==true)
 	{
-		server_state = json_response; // SERVER_STATE_UP, SERVER_STATE_DOWN, SERVER_STATE_UNKNOWN
+		server_state = last_state = json_response; // SERVER_STATE_UP, SERVER_STATE_DOWN, SERVER_STATE_UNKNOWN
 		if(server_state != SERVER_STATE_UNKNOWN)
 			rez = true;
 		else
 			rez = false;
 	}
 	else
-		server_state = SERVER_STATE_UNKNOWN;
+	{
+		// в случае однократного сбоя связи оставляем предыдущее состояние сервера
+		if(last_state == SERVER_STATE_UNKNOWN)
+			server_state = SERVER_STATE_UNKNOWN;
+		last_state = SERVER_STATE_UNKNOWN;
+	}
 	return rez;
 }
 
@@ -64,7 +70,7 @@ char send_command_to_server(char command)
 	if(config.token[0])
 		ptr += sprintf_P(ptr, PSTR("Authorization: Bearer %s\r\n"), config.token);
 	ptr += sprintf_P(ptr, PSTR("\r\n"));
-	rez = send_str_to_server(net_buf, config.domen, config.port, true, &process_data_from_server);
+	rez = send_str_to_server(net_buf, config.domen, config.port, &process_data_from_server);
 	if(rez==true)
 	{
 		if(json_status == STATUS_OK)
@@ -96,7 +102,7 @@ void switch_off_server_if_needed(void)
 	{
 		if(switch_off_from_call)
 			beep_ms(10);
-		time_stamp = get_time_s() + 900; // пытаемся отправить команду на выключение в течение 15 минут (900 секунд)
+		time_stamp = get_time_s() + config.period_of_test_s*10; // пытаемся отправить команду на выключение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_DOWN) == false)
 		{
 			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
@@ -117,7 +123,7 @@ void switch_off_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(120); // пауза между попытками. Нет смысла мельтешить.
+			delay_s(config.period_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(5000);
 		if(switch_off_from_call)
@@ -145,7 +151,7 @@ void turn_on_server_if_needed(void)
 	
 	if(command_to_wake_up_server == true)
 	{
-		time_stamp = get_time_s() + 900; // пытаемся отправить команду на включение в течение 15 минут (900 секунд)
+		time_stamp = get_time_s() + (short)config.period_of_test_s*7; // пытаемся отправить команду на включение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_UP) != true)
 		{
 			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
@@ -157,7 +163,7 @@ void turn_on_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(120); // пауза между попытками. Мельтешить нет смысла.
+			delay_s(config.period_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(1000);
 		command_to_wake_up_server = false;
@@ -181,10 +187,10 @@ void update_server_state_if_needed(void)
 	if(first)
 	{
 		first = false;
-		time_of_last_tcp_test_s = get_time_s() - PERIOD_OF_TEST_S + 5;
+		time_of_last_tcp_test_s = get_time_s() - config.period_of_test_s + 5;
 	}
 	
-	if((get_time_s() - time_of_last_tcp_test_s) > PERIOD_OF_TEST_S)
+	if((get_time_s() - time_of_last_tcp_test_s) > config.period_of_test_s)
 	{
 		time_of_last_tcp_test_s = get_time_s();
 		mdm_get_signal_strength();
@@ -206,7 +212,7 @@ void update_server_state_if_needed(void)
 		else
 		{
 			count_of_tests++;
-			if(count_of_tests >= ((3600*8)/PERIOD_OF_TEST_S))
+			if(count_of_tests >= ((3600*8)/120))
 				reset_mcu();
 			rez = test_gprs_connection();
 			if(rez==false)
@@ -232,7 +238,7 @@ char test_gprs_connection(void)
 	char rez;
 	
 	sprintf_P(net_buf, PSTR("http")); // отправляем не важно что
-	rez = send_str_to_server(net_buf, config.test_domen, 80, true, 0);
+	rez = send_str_to_server(net_buf, config.test_domen, 80, 0);
 	if(rez==true)
 		return true;
 	else
@@ -253,7 +259,7 @@ static char* get_json_val(char *ptr, __flash const char *str_p)
 		{
 			if((ptr[i]==0)||(i==99))
 				return false;
-			if(ptr[i]==' ')
+			if((ptr[i]==' ')||(ptr[i]=='	'))
 				continue;
 			if(ptr[i]==':')
 			{
@@ -266,7 +272,7 @@ static char* get_json_val(char *ptr, __flash const char *str_p)
 		{
 			if((ptr[i]==0)||(i==99))
 				return false;
-			if(ptr[i]==' ')
+			if((ptr[i]==' ')||(ptr[i]=='	'))
 				continue;
 			if(ptr[i]=='\"')
 			{
@@ -314,7 +320,7 @@ char send_report_to_developer_p(__flash const char *str)
 	if((config.developer_phone[0][0] == '+') && (config.reports_en))
 	{
 		send_sms_p(str, &config.developer_phone[0][0]);
-		config.reports_en--; // выключаем автоинформирование разработчика, чтобы не утомить его частыми сообщениями. Если надо, включит еще раз.
+		config.reports_en--; // выключаем автоинформирование разработчикаи. Если надо, разработчик включит еще раз.
 		EEPROM_save_report_to_developer();
 		return true;
 	}

@@ -37,6 +37,9 @@ typedef struct{
 	char debug_voice_enable;
 	char test_mode; // этот параметр должен быть в конце списка, т.к. по его величине определяется чистота EEPROM. Если он не в конце, то это временно.
 	char relay_enable;
+	Uchar time_to_wait_answer_s;
+	Uchar period_of_test_s;
+	Uchar time_to_wait_prompt_s;
 } config_t;
 
 

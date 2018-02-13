@@ -6,7 +6,7 @@
 #define ADMIN_LIST					1
 #define DEVELOPER_LIST				2
 
-#define PERIOD_OF_TEST_S			120
+//#define PERIOD_OF_TEST_S			120
 
 #define MAX_COUNT_OF_ERRORS			6
 

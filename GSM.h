@@ -34,7 +34,7 @@ char send_sms_p(__flash const char *str, char *phone);
 char check_phone_string(char *ptr);
 char get_message_from_mdm(void);
 void put_sms_in_queue(char *str);
-char send_str_to_server(char *str, char *domen, Ushort port, char break_connection, void (*tcp_data_processing)(char *ptr));
+char send_str_to_server(char *str, char *domen, Ushort port, void (*tcp_data_processing)(char *ptr));
 char mdm_wait_sms_header_ms(short time_to_wait_ms);
 char get_sms(void);
 char delete_all_sms(void);
