@@ -138,6 +138,7 @@ char* gsm_poll_for_string(void)
 		{
 			volatile char dummy;
 			dummy=dummy;
+			error_code1 = 1;
 		}
 		state = 0;
 	}

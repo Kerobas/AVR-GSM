@@ -486,6 +486,13 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("error;"), 6) == 0)
+	{
+		str += 6;
+		sprintf_P(sms_text, PSTR("error1=%d,error2=%d;"), error_code1, error_code2);
+		return str;
+	}
+	
 	return false;
 }
 

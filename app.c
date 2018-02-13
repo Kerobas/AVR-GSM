@@ -5,6 +5,9 @@
 
 Ulong errors_from_reset=0;
 
+char error_code1 = 0;
+char error_code2 = 0;
+
 static char json_status;
 static char json_response;
 
@@ -197,12 +200,13 @@ void update_server_state_if_needed(void)
 			{
 				count_of_errors++;
 				errors_from_reset++;
+				error_code2 = rez;
 			}
 		}
 		else
 		{
 			count_of_tests++;
-			if(count_of_tests >= (3600*4/PERIOD_OF_TEST_S))
+			if(count_of_tests >= ((3600*8)/PERIOD_OF_TEST_S))
 				reset_mcu();
 			rez = test_gprs_connection();
 			if(rez==false)

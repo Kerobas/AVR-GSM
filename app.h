@@ -24,7 +24,8 @@ extern Ulong errors_from_reset;
 extern char command_to_wake_up_server;
 extern char reset_command_accepted;
 
-
+extern char error_code1;
+extern char error_code2;
 
 
 
