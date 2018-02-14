@@ -102,7 +102,7 @@ void switch_off_server_if_needed(void)
 	{
 		if(switch_off_from_call)
 			beep_ms(10);
-		time_stamp = get_time_s() + config.period_of_test_s*10; // пытаемся отправить команду на выключение в течение 15 минут (900 секунд)
+		time_stamp = get_time_s() + 900; // пытаемся отправить команду на выключение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_DOWN) == false)
 		{
 			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
@@ -151,7 +151,7 @@ void turn_on_server_if_needed(void)
 	
 	if(command_to_wake_up_server == true)
 	{
-		time_stamp = get_time_s() + (short)config.period_of_test_s*7; // пытаемся отправить команду на включение в течение 15 минут (900 секунд)
+		time_stamp = get_time_s() + 900; // пытаемся отправить команду на включение в течение 15 минут (900 секунд)
 		while(send_command_to_server(SERVER_COMMAND_UP) != true)
 		{
 			if((get_time_s() - time_stamp) > 0) // если за 15 минут не удалось отправить команду, то перезапускаем систему
@@ -192,7 +192,6 @@ void update_server_state_if_needed(void)
 	
 	if((get_time_s() - time_of_last_tcp_test_s) > config.period_of_test_s)
 	{
-		time_of_last_tcp_test_s = get_time_s();
 		mdm_get_signal_strength();
 		if(count_of_errors < MAX_COUNT_OF_ERRORS)
 		{
@@ -227,6 +226,7 @@ void update_server_state_if_needed(void)
 				#endif
 			}
 		}
+		time_of_last_tcp_test_s = get_time_s();
 	}
 }
 

@@ -514,6 +514,13 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("connect;"), 8) == 0)
+	{
+		str += 8;
+		sprintf_P(sms_text, PSTR("connect=%d;"), config.time_to_wait_connect_s);
+		return str;
+	}
+	
 	return false;
 }
 
@@ -897,6 +904,25 @@ char* set_param(char *ptr)
 		if(*ptr != ';')
 			return false;
 		config.time_to_wait_prompt_s = val;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("connect="), 8) == 0)
+	{
+		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=8;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.time_to_wait_connect_s = val;
 		ptr++;
 		return ptr;
 	}

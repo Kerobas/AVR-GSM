@@ -59,6 +59,7 @@ void eeprom_read_config(void)
 		config.time_to_wait_answer_s = 25;
 		config.period_of_test_s = 180;
 		config.time_to_wait_prompt_s = 6;
+		config.time_to_wait_connect_s = 25;
 		sprintf_P(config.test_domen, PSTR("www.yandex.ru"));
 		eeprom_save_config();
 	}

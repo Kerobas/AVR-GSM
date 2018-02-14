@@ -1172,7 +1172,7 @@ char send_str_to_server(char *str, char *domen, Ushort port, void (*tcp_data_pro
 	if(rez == false)
 		return 14;
 	
-	rez = wait_connect_ok_s(10);
+	rez = wait_connect_ok_s(config.time_to_wait_connect_s);
 	if(rez == false)
 	{
 		rez = 15;
