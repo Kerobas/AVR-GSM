@@ -123,7 +123,7 @@ void switch_off_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(config.period_of_test_s); // пауза между попытками. Мельтешить нет смысла.
+			delay_s(config.interval_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(5000);
 		if(switch_off_from_call)
@@ -163,7 +163,7 @@ void turn_on_server_if_needed(void)
 				eeprom_save_config();
 				reset_mcu();
 			}
-			delay_s(config.period_of_test_s); // пауза между попытками. Мельтешить нет смысла.
+			delay_s(config.interval_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
 		delay_ms(1000);
 		command_to_wake_up_server = false;
@@ -187,10 +187,10 @@ void update_server_state_if_needed(void)
 	if(first)
 	{
 		first = false;
-		time_of_last_tcp_test_s = get_time_s() - config.period_of_test_s + 5;
+		time_of_last_tcp_test_s = get_time_s() - config.interval_of_test_s + 5;
 	}
 	
-	if((get_time_s() - time_of_last_tcp_test_s) > config.period_of_test_s)
+	if((get_time_s() - time_of_last_tcp_test_s) > config.interval_of_test_s)
 	{
 		mdm_get_signal_strength();
 		if(count_of_errors < MAX_COUNT_OF_ERRORS)

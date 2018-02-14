@@ -134,13 +134,11 @@ char* gsm_poll_for_string(void)
 	
 	if((get_time_s() - time_stamp) > 10)
 	{
-		if(state==5)
+		if(state)
 		{
-			volatile char dummy;
-			dummy=dummy;
-			error_code1 = 1;
+			error_code1 = state;
+			state = 0;
 		}
-		state = 0;
 	}
 	if(is_queue_not_empty())
 	{
@@ -1214,7 +1212,7 @@ exit:
 			count_of_errors++;
 		if(count_of_errors==1)
 			time_of_first_error = get_time_s();
-		if((get_time_s()-time_of_first_error) >= config.period_of_test_s)
+		if((get_time_s()-time_of_first_error) >= config.interval_of_test_s)
 		{
 			count_of_errors = 0;
 			delay_ms(100);

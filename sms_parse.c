@@ -493,10 +493,10 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
-	else if(memcmp_P(str, PSTR("period;"), 7) == 0)
+	else if(memcmp_P(str, PSTR("interval;"), 9) == 0)
 	{
-		str += 7;
-		sprintf_P(sms_text, PSTR("period=%ds;"), config.period_of_test_s);
+		str += 9;
+		sprintf_P(sms_text, PSTR("period=%ds;"), config.interval_of_test_s);
 		return str;
 	}
 	
@@ -851,13 +851,13 @@ char* set_param(char *ptr)
 		return ptr;
 	}
 	
-	if(memcmp_P(ptr, PSTR("period="), 7) == 0)
+	if(memcmp_P(ptr, PSTR("interval="), 9) == 0)
 	{
 		Ulong val;
 		
 		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
 			return false;
-		ptr+=7;
+		ptr+=9;
 		if(isdigit(*ptr) == false)
 			return false;
 		val = strtoul(ptr, &ptr, 10);
@@ -865,7 +865,7 @@ char* set_param(char *ptr)
 			return false;
 		if(*ptr != ';')
 			return false;
-		config.period_of_test_s = val;
+		config.interval_of_test_s = val;
 		ptr++;
 		return ptr;
 	}

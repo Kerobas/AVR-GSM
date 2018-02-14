@@ -38,7 +38,7 @@ typedef struct{
 	char test_mode; // по величине этого параметра определяется чистота EEPROM
 	char relay_enable;
 	Uchar time_to_wait_answer_s; // тюнинг работы модема
-	Uchar period_of_test_s; // тюнинг работы модема
+	Uchar interval_of_test_s; // тюнинг работы модема
 	Uchar time_to_wait_prompt_s; // тюнинг работы модема
 	Uchar time_to_wait_connect_s; // тюнинг работы модема
 } config_t;
