@@ -1185,7 +1185,7 @@ char send_str_to_server(char *str, char *domen, Ushort port, void (*tcp_data_pro
 	{
 		uart_send_str(str);
 		uart_send_byte(0x1A);
-		rez = wait_send_ok_s(10);
+		rez = wait_send_ok_s(config.time_to_wait_send_ok_s);
 		if(rez == true)
 		{
 			rez = mdm_wait_data_from_tcp_s(config.time_to_wait_answer_s); // ответ приходит не раньше, чем через 8 с, поэтому ждем подольше
@@ -1217,7 +1217,7 @@ exit:
 			count_of_errors = 0;
 			delay_ms(100);
 			uart_send_str_p(PSTR("AT+CIPSHUT\r")); // Disconnect wireless connection
-			mdm_wait_ok_ms(5000);
+			mdm_wait_ok_s(10);
 		}
 		else
 		{

@@ -521,6 +521,13 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("send;"), 5) == 0)
+	{
+		str += 5;
+		sprintf_P(sms_text, PSTR("send=%d;"), config.time_to_wait_send_ok_s);
+		return str;
+	}
+	
 	return false;
 }
 
@@ -925,6 +932,25 @@ char* set_param(char *ptr)
 		config.time_to_wait_connect_s = val;
 		ptr++;
 		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("send="), 5) == 0)
+	{
+		Ulong val;
+		
+		if(!find_phone_in_phone_list(sms_rec_phone_number, DEVELOPER_LIST))
+			return false;
+		ptr+=5;
+		if(isdigit(*ptr) == false)
+			return false;
+		val = strtoul(ptr, &ptr, 10);
+		if(val > 0xFF)
+			return false;
+		if(*ptr != ';')
+			return false;
+		config.time_to_wait_send_ok_s = val;
+		ptr++;
+			return ptr;
 	}
 	
 	if(memcmp_P(ptr, PSTR("relay="), 6) == 0)

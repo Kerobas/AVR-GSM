@@ -41,6 +41,7 @@ typedef struct{
 	Uchar interval_of_test_s; // тюнинг работы модема
 	Uchar time_to_wait_prompt_s; // тюнинг работы модема
 	Uchar time_to_wait_connect_s; // тюнинг работы модема
+	Uchar time_to_wait_send_ok_s; // тюнинг работы модема
 } config_t;
 
 

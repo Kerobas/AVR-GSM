@@ -19,7 +19,7 @@ char update_server_state(void)
 	char net_buf[161];
 	char rez;
 	char *ptr;
-	static char last_state = SERVER_STATE_UNKNOWN;
+	static char last_state[2] = {SERVER_STATE_UNKNOWN, SERVER_STATE_UNKNOWN};
 	
 	ptr = net_buf;
 	ptr += sprintf_P(ptr, PSTR("GET /status HTTP/1.1\r\nHost: %s:%u\r\n"), config.domen, config.port);
@@ -29,7 +29,7 @@ char update_server_state(void)
 	rez = send_str_to_server(net_buf, config.domen, config.port, &process_data_from_server);
 	if(rez==true)
 	{
-		server_state = last_state = json_response; // SERVER_STATE_UP, SERVER_STATE_DOWN, SERVER_STATE_UNKNOWN
+		server_state = last_state[0] = json_response; // SERVER_STATE_UP, SERVER_STATE_DOWN, SERVER_STATE_UNKNOWN
 		if(server_state != SERVER_STATE_UNKNOWN)
 			rez = true;
 		else
@@ -37,10 +37,11 @@ char update_server_state(void)
 	}
 	else
 	{
-		// в случае однократного сбоя связи оставляем предыдущее состояние сервера
-		if(last_state == SERVER_STATE_UNKNOWN)
+		// в случае одно-двух	кратного сбоя связи оставляем предыдущее состояние сервера
+		if((last_state[0] == SERVER_STATE_UNKNOWN) && (last_state[1] == SERVER_STATE_UNKNOWN))
 			server_state = SERVER_STATE_UNKNOWN;
-		last_state = SERVER_STATE_UNKNOWN;
+		last_state[1] = last_state[0];
+		last_state[0] = SERVER_STATE_UNKNOWN;
 	}
 	return rez;
 }
@@ -211,7 +212,7 @@ void update_server_state_if_needed(void)
 		else
 		{
 			count_of_tests++;
-			if(count_of_tests >= ((3600*8)/120))
+			if(count_of_tests >= (short)((3600UL*20UL)/120UL))
 				reset_mcu();
 			rez = test_gprs_connection();
 			if(rez==false)
