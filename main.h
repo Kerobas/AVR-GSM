@@ -18,7 +18,7 @@ typedef long Int32;
 
 #define true     1
 #define false    0
-#define SOFTWARE_VERSION "0.0.0"
+#define SOFTWARE_VERSION "0.0.1"
 
 #define _WDT_RESET()            asm("wdr")
 #define _SLEEP()                asm("sleep")
