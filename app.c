@@ -4,7 +4,7 @@
 #define STATUS_OK      1
 
 Ulong errors_from_reset=0;
-
+short time_of_last_sms_test_m=0;
 char error_code1 = 0;
 char error_code2 = 0;
 
@@ -122,7 +122,7 @@ void switch_off_server_if_needed(void)
 					send_report_to_developer_p(PSTR("Turn off server from button push. Fail. Device is resetting"));
 				}
 				eeprom_save_config();
-				reset_mcu();
+				reset_mcu(true);
 			}
 			delay_s(config.interval_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
@@ -162,7 +162,7 @@ void turn_on_server_if_needed(void)
 				sprintf_P(config.last_event, PSTR("Turn on server from admin SMS %s. Fail."), sms_rec_phone_number);
 				set_val(time_from_event_s, 0);
 				eeprom_save_config();
-				reset_mcu();
+				reset_mcu(true);
 			}
 			delay_s(config.interval_of_test_s); // пауза между попытками. Мельтешить нет смысла.
 		}
@@ -213,7 +213,7 @@ void update_server_state_if_needed(void)
 		{
 			count_of_tests++;
 			if(count_of_tests >= (short)((3600UL*20UL)/120UL))
-				reset_mcu();
+				reset_mcu(true);
 			rez = test_gprs_connection();
 			if(rez==false)
 				count_of_errors++;
@@ -223,7 +223,7 @@ void update_server_state_if_needed(void)
 			{
 				send_report_to_developer_p(PSTR("No Internet connection. Device is resetting."));
 				#if(DEBUG==0)
-				reset_mcu();
+				reset_mcu(true);
 				#endif
 			}
 		}
@@ -328,13 +328,53 @@ char send_report_to_developer_p(__flash const char *str)
 	return false;
 }
 
+//*******************************************************************************************************************
 
+void test_sms_channel_if_needed(void)
+{
+	static char first = true;
+	static char sent = false;
+	
+	if(config.interval_of_sms_test_m)
+	{
+		if(first)
+		{
+			first = false;
+			time_of_last_sms_test_m = get_time_m();
+		}
+		
+		if((get_time_s() - time_of_last_sms_test_m) > config.interval_of_sms_test_m)
+		{
+			if(sent == false)
+			{
+				send_sms_p(PSTR("SMS channel test"),  &config.my_phone[0]);
+				sent=true;
+			}
+			else if((get_time_s() - time_of_last_sms_test_m) > (config.interval_of_sms_test_m+15)) // даем СМС-ке 15 минут, чтобы вернуться
+			{
+				if(config.sms_reset_count < 60000UL) 
+					config.sms_reset_count++;
+				reset_mcu(true);
+			}
+		}
+		else
+			sent = false;
+	}
+}
 
+//*******************************************************************************************************************
 
-
-
-
-
+void reset_if_needed_by_schedule(void)
+{
+	Ulong time;
+	
+	if(config.reset_period_m)
+	{
+		time = get_val(time_from_start_s);
+		if(time > (Ulong)config.reset_period_m*60)
+			reset_mcu(false);
+	}
+}
 
 
 

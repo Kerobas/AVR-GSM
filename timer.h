@@ -6,6 +6,7 @@
 void timer0_init(void);
 short get_time_ms(void);
 short get_time_s(void);
+short get_time_m(void);
 void delay_ms(short delay);
 void delay_s(short delay);
 void timer1_init(void);

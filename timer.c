@@ -3,6 +3,7 @@
 
 static short time_ms=0;
 static short time_s=0;
+static short time_m=0;
 
 static char beep_on = false;
 static Ushort beep_counter = 0;
@@ -56,6 +57,7 @@ void beep_control(void)
 ISR(TIMER0_COMP_vect)
 {
 	static Uchar i=0;
+	static Uchar j=0;
 	
 	ADC_result_processing();
 	led_management();
@@ -69,9 +71,15 @@ ISR(TIMER0_COMP_vect)
 		time_s++;
 		time_from_start_s++;
 		soft_wdt++;
+		j++;
+		if(j>=60)
+		{
+			j=0;
+			time_m++;
+		}
 #if(DEBUG==0)		
 		if(soft_wdt > 1200) // 1200 секунд 20 минут
-			reset_mcu();
+			reset_mcu(true);
 #endif
 		check_power();
 		inc_time_from_last_event();
@@ -93,6 +101,13 @@ short get_time_ms(void)
 short get_time_s(void)
 {
 	return get_val(time_s);
+}
+
+//*******************************************************************************************************************
+
+short get_time_m(void)
+{
+	return get_val(time_m);
 }
 
 //*******************************************************************************************************************

@@ -3,11 +3,11 @@
 
 
 
-void reset_mcu(void)
+void reset_mcu(char increment)
 {
 #if(DEBUG==0)
 	config.reset_count++;
-	if(config.reset_count < 80000UL)
+	if((config.reset_count < 80000UL) && increment)
 		EEPROM_save_reset_count();
 	EEPROM_save_time_from_event();
 #endif
@@ -49,23 +49,23 @@ int main(void)
 	{
 		if(config.unable_to_turn_on_modem < 80000UL)
 			config.unable_to_turn_on_modem++;
-		reset_mcu();
+		reset_mcu(true);
 	}
 	reset_soft_wdt();
 	
 	
 	rez = mdm_wait_registration_s(600);
 	if(rez == false)
-		reset_mcu();
+		reset_mcu(true);
 	reset_soft_wdt();
 	
 	rez = mdm_get_operator_name();
 	if(rez == false)
-		reset_mcu();
+		reset_mcu(true);
 	
 	rez = mdm_setup_apn();
 	if(rez == false)
-		reset_mcu();
+		reset_mcu(true);
 	reset_soft_wdt();
 	
 	beep_ms(10);
@@ -79,7 +79,7 @@ int main(void)
 	while(1)
     {
 		if(reset_command_accepted)
-			reset_mcu();
+			reset_mcu(true);
 		switch_off_server_if_needed();
 		turn_on_server_if_needed();
 		update_server_state_if_needed();

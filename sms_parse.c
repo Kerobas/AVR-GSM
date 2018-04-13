@@ -165,6 +165,12 @@ void process_sms_body(char *ptr)
 		reset_command_accepted = true;
 	}
 	
+	else if(memcmp_P(ptr, PSTR("SMS channel test"), 16) == 0)
+	{
+		if(memcmp(sms_rec_phone_number, &config.my_phone[0], 12) == 0)
+			time_of_last_sms_test_m = get_time_m();
+	}
+	
 	else if(memcmp_P(ptr, PSTR("help;"), 5) == 0)
 	{
 		if((find_phone_in_phone_list(sms_rec_phone_number, ADMIN_LIST) == false) && (config.admin_mode == true))
@@ -377,6 +383,13 @@ char* get_param(char *str, char *sms_text)
 		return str;
 	}
 	
+	else if(memcmp_P(str, PSTR("myphone;"), 8) == 0)
+	{
+		str += 8;
+		sprintf_P(sms_text, PSTR("myphone=%s;"), config.my_phone);
+		return str;
+	}
+	
 	else if(memcmp_P(str, PSTR("serverstate;"), 12) == 0)
 	{
 		str += 12;
@@ -421,6 +434,27 @@ char* get_param(char *str, char *sms_text)
 			s = time - m*60;
 			sms_text += sprintf_P(sms_text, PSTR("(low during %ud%uh%um%us);"), d, h, m, s);
 		}
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("resetperiod;"), 12) == 0)
+	{
+		str += 12;
+		sprintf_P(sms_text, PSTR("resetperiod=%u;"), config.reset_period_m);
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("smsinterval;"), 12) == 0)
+	{
+		str += 12;
+		sprintf_P(sms_text, PSTR("smsinterval=%u;"), config.interval_of_sms_test_m);
+		return str;
+	}
+	
+	else if(memcmp_P(str, PSTR("smsresetcount;"), 14) == 0)
+	{
+		str += 14;
+		sprintf_P(sms_text, PSTR("smsresetcount=%u;"), config.sms_reset_count);
 		return str;
 	}
 	
@@ -606,13 +640,45 @@ char* set_param(char *ptr)
 		Ulong press;
 		ptr+=10;
 		if(isdigit(*ptr) == false)
-			return false;
+		return false;
 		press = strtoul(ptr, &ptr, 10);
 		if(press > 10000)
+		return false;
+		if(*ptr != ';')
+		return false;
+		config.long_press_ms = press;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("resetperiod="), 12) == 0)
+	{
+		Ulong period;
+		ptr+=12;
+		if(isdigit(*ptr) == false)
+		return false;
+		period = strtoul(ptr, &ptr, 10);
+		if( (period > 60000) || ((period<60)&&(period!=0)) )
+		return false;
+		if(*ptr != ';')
+		return false;
+		config.reset_period_m = period;
+		ptr++;
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("smsinterval="), 12) == 0)
+	{
+		Ulong interval;
+		ptr+=12;
+		if(isdigit(*ptr) == false)
+			return false;
+		interval = strtoul(ptr, &ptr, 10);
+		if( (interval>60000) || ((interval<60)&&(interval!=0)) )
 			return false;
 		if(*ptr != ';')
 			return false;
-		config.long_press_ms = press;
+		config.interval_of_sms_test_m = interval;
 		ptr++;
 		return ptr;
 	}
@@ -754,6 +820,13 @@ char* set_param(char *ptr)
 	{
 		ptr+=16;
 		ptr = set_phones(ptr, &config.developer_phone[0][0], TOTAL_DEVELOPER_NUMBER);
+		return ptr;
+	}
+	
+	if(memcmp_P(ptr, PSTR("myphone="), 8) == 0)
+	{
+		ptr+=8;
+		ptr = set_phones(ptr, &config.my_phone[0], 1);
 		return ptr;
 	}
 	

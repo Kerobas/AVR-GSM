@@ -64,6 +64,8 @@ void eeprom_read_config(void)
 		sprintf_P(config.test_domen, PSTR("www.yandex.ru"));
 		eeprom_save_config();
 	}
+	if(config.sms_reset_count==0xFFFF)
+		config.sms_reset_count = 0;
 	if(get_val(time_from_event_s) < config.time_from_event_s)
 		set_val(time_from_event_s, config.time_from_event_s);
 }
@@ -82,6 +84,7 @@ void EEPROM_save_reset_count(void)
 {
 	EEPROM_write_buf((char*)&config.unable_to_turn_on_modem, sizeof(config.unable_to_turn_on_modem), 0 + (Ushort)((char*)&config.unable_to_turn_on_modem - (char*)&config));
 	EEPROM_write_buf((char*)&config.reset_count, sizeof(config.reset_count), 0 + (Ushort)((char*)&config.reset_count - (char*)&config));
+	EEPROM_write_buf((char*)&config.sms_reset_count, sizeof(config.sms_reset_count), 0 + (Ushort)((char*)&config.sms_reset_count - (char*)&config));
 }
 
 //*******************************************************************************************************************

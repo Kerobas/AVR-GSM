@@ -47,7 +47,7 @@ typedef long Int32;
 #include "sms_parse.h"
 
 
-extern void reset_mcu(void);
+extern void reset_mcu(char increment);
 
 
 
