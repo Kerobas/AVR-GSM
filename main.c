@@ -88,6 +88,7 @@ int main(void)
 		get_sms();
 		incoming_call_processing();
 		power_control();
+		reset_if_needed_by_schedule();
 		test_sms_channel_if_needed();
 		while(is_queue_not_empty())
 			get_message_from_mdm();			
