@@ -343,14 +343,15 @@ void test_sms_channel_if_needed(void)
 			time_of_last_sms_test_m = get_time_m();
 		}
 		
-		if((get_time_s() - time_of_last_sms_test_m) > config.interval_of_sms_test_m)
+		if((get_time_m() - time_of_last_sms_test_m) > config.interval_of_sms_test_m)
 		{
 			if(sent == false)
 			{
-				send_sms_p(PSTR("SMS channel test"),  &config.my_phone[0]);
+				if(config.my_phone[0] == '+')
+					send_sms_p(PSTR("SMS channel test"),  &config.my_phone[0]);
 				sent=true;
 			}
-			else if((get_time_s() - time_of_last_sms_test_m) > (config.interval_of_sms_test_m+15)) // даем СМС-ке 15 минут, чтобы вернуться
+			else if((get_time_m() - time_of_last_sms_test_m) > (config.interval_of_sms_test_m+15)) // даем СМС-ке 15 минут, чтобы вернуться
 			{
 				if(config.sms_reset_count < 60000UL) 
 					config.sms_reset_count++;
