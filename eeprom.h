@@ -43,9 +43,9 @@ typedef struct{
 	Uchar time_to_wait_connect_s; // тюнинг работы модема
 	Uchar time_to_wait_send_ok_s; // тюнинг работы модема
 	char my_phone[13];
-	Ushort reset_period_m;
+	Ushort reset_period_h;
 	Ushort sms_reset_count;
-	Ushort interval_of_sms_test_m;
+	Ushort interval_of_sms_test_h;
 } config_t;
 
 

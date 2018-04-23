@@ -335,7 +335,7 @@ void test_sms_channel_if_needed(void)
 	static char first = true;
 	static char sent = false;
 	
-	if(config.interval_of_sms_test_m)
+	if(config.interval_of_sms_test_h)
 	{
 		if(first)
 		{
@@ -343,7 +343,7 @@ void test_sms_channel_if_needed(void)
 			time_of_last_sms_test_m = get_time_m();
 		}
 		
-		if((get_time_m() - time_of_last_sms_test_m) > config.interval_of_sms_test_m)
+		if((get_time_m() - time_of_last_sms_test_m) > (config.interval_of_sms_test_h*60))
 		{
 			if(sent == false)
 			{
@@ -351,7 +351,7 @@ void test_sms_channel_if_needed(void)
 					send_sms_p(PSTR("SMS channel test"),  &config.my_phone[0]);
 				sent=true;
 			}
-			else if((get_time_m() - time_of_last_sms_test_m) > (config.interval_of_sms_test_m+15)) // даем СМС-ке 15 минут, чтобы вернуться
+			else if((get_time_m() - time_of_last_sms_test_m) > (config.interval_of_sms_test_h*60+15)) // даем СМС-ке 15 минут, чтобы вернуться
 			{
 				if(config.sms_reset_count < 60000UL) 
 					config.sms_reset_count++;
@@ -371,10 +371,10 @@ void reset_if_needed_by_schedule(void)
 {
 	Ulong time;
 	
-	if(config.reset_period_m)
+	if(config.reset_period_h)
 	{
 		time = get_val(time_from_start_s);
-		if(time > (Ulong)config.reset_period_m*60)
+		if(time > (Ulong)config.reset_period_h*3600)
 			reset_mcu(false);
 	}
 }

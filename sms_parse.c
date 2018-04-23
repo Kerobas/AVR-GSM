@@ -440,14 +440,14 @@ char* get_param(char *str, char *sms_text)
 	else if(memcmp_P(str, PSTR("resetperiod;"), 12) == 0)
 	{
 		str += 12;
-		sprintf_P(sms_text, PSTR("resetperiod=%u;"), config.reset_period_m);
+		sprintf_P(sms_text, PSTR("resetperiod=%u;"), config.reset_period_h);
 		return str;
 	}
 	
 	else if(memcmp_P(str, PSTR("smsinterval;"), 12) == 0)
 	{
 		str += 12;
-		sprintf_P(sms_text, PSTR("smsinterval=%u;"), config.interval_of_sms_test_m);
+		sprintf_P(sms_text, PSTR("smsinterval=%u;"), config.interval_of_sms_test_h);
 		return str;
 	}
 	
@@ -658,11 +658,11 @@ char* set_param(char *ptr)
 		if(isdigit(*ptr) == false)
 		return false;
 		period = strtoul(ptr, &ptr, 10);
-		if( (period > 60000) || ((period<60)&&(period!=0)) )
-		return false;
+		if(period > 60000)
+			return false;
 		if(*ptr != ';')
-		return false;
-		config.reset_period_m = period;
+			return false;
+		config.reset_period_h = period;
 		ptr++;
 		return ptr;
 	}
@@ -674,11 +674,11 @@ char* set_param(char *ptr)
 		if(isdigit(*ptr) == false)
 			return false;
 		interval = strtoul(ptr, &ptr, 10);
-		if( (interval>60000) || ((interval<60)&&(interval!=0)) )
+		if( interval>60000 )
 			return false;
 		if(*ptr != ';')
 			return false;
-		config.interval_of_sms_test_m = interval;
+		config.interval_of_sms_test_h = interval;
 		ptr++;
 		return ptr;
 	}
