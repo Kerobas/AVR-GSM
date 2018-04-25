@@ -335,7 +335,7 @@ void test_sms_channel_if_needed(void)
 	static char first = true;
 	static char sent = false;
 	
-	if(config.interval_of_sms_test_h)
+	if((config.interval_of_sms_test_h) && (config.my_phone[0] == '+'))
 	{
 		if(first)
 		{
