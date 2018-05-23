@@ -6,9 +6,11 @@
 void reset_mcu(char increment)
 {
 #if(DEBUG==0)
-	config.reset_count++;
 	if((config.reset_count < 80000UL) && increment)
+	{
+		config.reset_count++;
 		EEPROM_save_reset_count();
+	}
 	EEPROM_save_time_from_event();
 #endif
 	cli(); // запрещаем прерывания и ждем перезагрузки по сторожевому таймеру
@@ -31,20 +33,19 @@ int main(void)
 	timer1_init();
 	init_uart(true);
 	ADC_init();
-	sei();
+	sei(); // разрешаем прерывания
 	
-	delay_ms(100);
+	delay_ms(500); // задержка перед работой с EEPROM, т.к. на старте питание может быть не стабильным
+	eeprom_read_config(); // вычитываем настройки
+	check_rst_source(); // смотрим, что было источником перезагрузки
 	
-	eeprom_read_config();
-	check_rst_source();
+	external_communication(); // проверяем подключение по USB
 	
-	external_communication();
-	
+	beep_ms(10); // три коротких звуковых сигнала
 	beep_ms(10);
 	beep_ms(10);
-	beep_ms(10);
 	
-	rez = gsm_mdm_init();
+	rez = gsm_mdm_init(); // инициализация GSM модема
 	if(rez == false)
 	{
 		if(config.unable_to_turn_on_modem < 80000UL)
@@ -53,8 +54,7 @@ int main(void)
 	}
 	reset_soft_wdt();
 	
-	
-	rez = mdm_wait_registration_s(600);
+	rez = mdm_wait_registration_s(600); // ждем регистрации в GSM сети 600 секунд
 	if(rez == false)
 		reset_mcu(true);
 	reset_soft_wdt();
@@ -68,34 +68,34 @@ int main(void)
 		reset_mcu(true);
 	reset_soft_wdt();
 	
-	beep_ms(10);
+	beep_ms(10); // звуковой сигнал после успешной регистрации в сети
 	beep_ms(10);
 	beep_ms(200);
 	
-	get_sms();
+	get_sms(); // чиаем принятые СМС
 	delete_all_sms(); // попытка обойти глюк модема
 	
 	
 	while(1)
-    {
-		if(reset_command_accepted)
+	{
+		if(reset_command_accepted) // перезапускаемся, если пришла СМС команда на перезапуск
 			reset_mcu(true);
-		switch_off_server_if_needed();
-		turn_on_server_if_needed();
-		update_server_state_if_needed();
+		switch_off_server_if_needed(); // выключаем сервер, если была нажата кнопка или поступил звонок пользователя
+		turn_on_server_if_needed(); // включаем сервер, если пришла соответствующая команда по СМС от администратора
+		update_server_state_if_needed(); // запрашиваем состояние сервера
 		reset_soft_wdt();
-		external_communication();
-		get_sms();
-		incoming_call_processing();
+		external_communication(); // проверяем подключение по USB
+		get_sms(); // чиаем принятые СМС
+		incoming_call_processing(); // обрабатываем входящие звонки
 		power_control();
-		reset_if_needed_by_schedule();
-		test_sms_channel_if_needed();
+		reset_if_needed_by_schedule(); // перезапуск микроконтроллера по графику из настроек
+		test_sms_channel_if_needed(); // тест SMS канала связи по графику из настроек
 		while(is_queue_not_empty())
-			get_message_from_mdm();			
+			get_message_from_mdm(); // смотрим входной буфер UART
 #if(DEBUG==0)
 		_SLEEP();
 #endif
-    }
+	}
 }
 
 
